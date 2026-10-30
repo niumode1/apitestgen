@@ -1,0 +1,40 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam packageStyle rectangle
+title 系统架构图
+
+rectangle "前端展示层" {
+  [首页]
+  [工作台]
+  [Postman]
+  [LLM配置]
+}
+
+rectangle "API网关层" {
+  [项目管理]
+  [文档管理]
+  [测试生成]
+  [测试执行]
+  [报告管理]
+}
+
+rectangle "业务服务层" {
+  [文档解析器]
+  [LLM引擎]
+  [执行引擎]
+  [报告引擎]
+}
+
+database "数据库\n(SQLite)" as DB
+
+cloud "LLM云服务" {
+  [DeepSeek]
+  [OpenAI]
+  [Ollama]
+}
+
+"前端展示层" --> "API网关层"
+"API网关层" --> "业务服务层"
+"业务服务层" --> DB
+"业务服务层" --> "LLM云服务"
+@enduml

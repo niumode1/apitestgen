@@ -1,0 +1,43 @@
+Generate negative (error-case) pytest test cases for the following API endpoint.
+These tests verify the API properly rejects invalid inputs.
+
+## Endpoint Information
+- Path: {{ endpoint.path }}
+- Method: {{ endpoint.method.upper() }}
+- Summary: {{ endpoint.summary }}
+
+## Parameters
+{% if endpoint.parameters %}
+{% for param in endpoint.parameters %}
+- Name: {{ param.get('name', 'unknown') }}
+  In: {{ param.get('in', 'unknown') }}
+  Required: {{ param.get('required', False) }}
+  Schema: {{ param.get('schema', {}) | tojson }}
+{% endfor %}
+{% else %}
+(None)
+{% endif %}
+
+## Request Body
+{% if endpoint.request_body %}
+{{ endpoint.request_body | tojson(indent=2) }}
+{% else %}
+(None)
+{% endif %}
+
+## Instructions
+Generate {{ count | default(4) }} negative test cases. Cover these scenarios:
+
+1. **Missing required fields**: Omit each required parameter/field, expect 400 or 422
+2. **Wrong data types**: Send string where integer is expected, etc., expect 400 or 422
+3. **Invalid enum values**: Send values not in the allowed enum list
+4. **Malformed request body**: Send invalid JSON, empty body, wrong content-type
+5. **Out-of-range values**: Send values below minimum or above maximum
+
+CRITICAL RULES:
+- NEVER use conditional assertions (no if/else around assert)
+- Assert response status code is an error code (400/422/404)
+- Assert error response has a meaningful message or structure
+- Every assert must have a descriptive error message
+
+Return ONLY ```python blocks. Use httpx.AsyncClient and BASE_URL from conftest.

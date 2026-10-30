@@ -1,0 +1,63 @@
+Analyze the following API endpoint and provide a structured JSON analysis.
+
+## Endpoint
+- Path: {{ endpoint.path }}
+- Method: {{ endpoint.method.upper() }}
+- Summary: {{ endpoint.summary }}
+- Description: {{ endpoint.description }}
+- Operation ID: {{ endpoint.operation_id }}
+- Tags: {{ endpoint.tags | tojson }}
+
+## Parameters
+{% if endpoint.parameters %}
+{% for param in endpoint.parameters %}
+- Name: {{ param.get('name', 'unknown') }}
+  Location: {{ param.get('in', 'unknown') }}
+  Required: {{ param.get('required', False) }}
+  Type: {{ param.get('schema', {}).get('type', 'unknown') if param.get('schema') else 'unknown' }}
+  {% if param.get('schema', {}).get('enum') %}Enum values: {{ param.get('schema', {}).get('enum') | tojson }}{% endif %}
+  {% if param.get('schema', {}).get('minimum') is not none %}Minimum: {{ param.get('schema', {}).get('minimum') }}{% endif %}
+  {% if param.get('schema', {}).get('maximum') is not none %}Maximum: {{ param.get('schema', {}).get('maximum') }}{% endif %}
+  {% if param.get('schema', {}).get('minLength') is not none %}Min Length: {{ param.get('schema', {}).get('minLength') }}{% endif %}
+  {% if param.get('schema', {}).get('maxLength') is not none %}Max Length: {{ param.get('schema', {}).get('maxLength') }}{% endif %}
+  {% if param.get('schema', {}).get('pattern') %}Pattern: {{ param.get('schema', {}).get('pattern') }}{% endif %}
+{% endfor %}
+{% else %}
+(None)
+{% endif %}
+
+## Request Body
+{% if endpoint.request_body %}
+{{ endpoint.request_body | tojson(indent=2) }}
+{% else %}
+(None)
+{% endif %}
+
+## Responses
+{% for status, resp in endpoint.responses.items() %}
+- {{ status }}: {{ resp.get('description', 'No description') }}
+{% endfor %}
+
+## Task
+Provide a JSON analysis with these fields:
+{
+  "parameter_insights": [
+    {
+      "name": "param_name",
+      "type": "string/integer/boolean/array/object",
+      "required": true/false,
+      "constraints": ["min: X", "max: Y", "enum: [...]", "pattern: ..."],
+      "risk": "low/medium/high",
+      "risk_description": "why this parameter is risky",
+      "test_suggestions": ["suggestion 1", "suggestion 2"]
+    }
+  ],
+  "auth_required": true/false,
+  "auth_type": "none/api_key/oauth2/bearer/basic",
+  "idempotency": "idempotent/non_idempotent/unknown",
+  "complexity": "simple/medium/complex",
+  "test_priorities": ["priority 1", "priority 2", "..."],
+  "edge_cases": ["edge case 1", "edge case 2", "..."]
+}
+
+Return ONLY valid JSON, no markdown fences.

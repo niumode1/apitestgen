@@ -1,0 +1,41 @@
+Generate security-focused test cases for the following API endpoint.
+These tests verify the API safely handles malicious inputs.
+
+## Endpoint Information
+- Path: {{ endpoint.path }}
+- Method: {{ endpoint.method.upper() }}
+
+## Parameters
+{% if endpoint.parameters %}
+{% for param in endpoint.parameters %}
+- Name: {{ param.get('name', 'unknown') }}
+  In: {{ param.get('in', 'unknown') }}
+  Type: {{ param.get('schema', {}).get('type', 'string') if param.get('schema') else 'string' }}
+{% endfor %}
+{% else %}
+(None)
+{% endif %}
+
+## Instructions
+Generate {{ count | default(3) }} security test cases. Pick the MOST relevant from:
+
+1. **SQL Injection**: Send SQLi payloads in query/path/body params — expect 400 (not 500, no data leak)
+   Payloads: "'; DROP TABLE users; --", "1' OR '1'='1", "1; SELECT * FROM users"
+2. **XSS**: Send script tags in string fields — expect 400 or sanitized response (no raw script reflected)
+   Payloads: "<script>alert(1)</script>", "<img src=x onerror=alert(1)>"
+3. **Path Traversal**: Send "../" sequences in path params — expect 400 or 404
+   Payloads: "../../../etc/passwd", "..\\..\\windows\\system32"
+4. **NoSQL Injection**: Send MongoDB operators in JSON body — expect 400
+   Payloads: {"$gt": ""}, {"$ne": null}, {"$where": "1==1"}
+5. **Oversized Input**: Send very long strings (10000+ chars) or huge arrays — expect 400 or 413
+6. **Invalid Auth**: Send wrong/missing/expired auth token — expect 401/403
+
+For each test:
+- Send the malicious payload
+- Assert status is NOT 200 (must be 400/401/403/422)
+- Assert status is NOT 500 (server must not crash)
+- Assert response does NOT contain raw error traces
+
+CRITICAL: No conditional assertions. Every assert runs unconditionally.
+
+Return ONLY ```python blocks. Use httpx.AsyncClient and BASE_URL.

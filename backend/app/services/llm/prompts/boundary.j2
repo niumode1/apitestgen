@@ -1,0 +1,46 @@
+Generate boundary value test cases for the following API endpoint.
+Boundary tests verify correct behavior at the edges of valid input ranges.
+
+## Endpoint Information
+- Path: {{ endpoint.path }}
+- Method: {{ endpoint.method.upper() }}
+
+## Parameters
+{% if endpoint.parameters %}
+{% for param in endpoint.parameters %}
+- Name: {{ param.get('name', 'unknown') }}
+  In: {{ param.get('in', 'unknown') }}
+  Required: {{ param.get('required', False) }}
+  Schema: {{ param.get('schema', {}) | tojson }}
+{% endfor %}
+{% else %}
+(None)
+{% endif %}
+
+## Instructions
+Generate {{ count | default(4) }} boundary value tests covering:
+
+For numeric parameters (min=0, max=100):
+- Value = 0 (minimum valid) → expect 200
+- Value = 100 (maximum valid) → expect 200
+- Value = -1 (below minimum) → expect 400/422
+- Value = 101 (above maximum) → expect 400/422
+
+For string parameters (minLength=1, maxLength=50):
+- String of length 1 → expect 200
+- String of length 50 → expect 200
+- Empty string "" → expect 400/422
+- String of length 51 → expect 400/422
+
+For required parameters:
+- null / missing → expect 400/422
+
+For pagination parameters:
+- page=0 → expect 400 or default
+- page=-1 → expect 400
+- page_size=0 → expect 400
+- page_size=99999 → expect 400 or capped
+
+CRITICAL: Every assert executes unconditionally — no if/else guards.
+
+Return ONLY ```python blocks. Use httpx.AsyncClient and BASE_URL.

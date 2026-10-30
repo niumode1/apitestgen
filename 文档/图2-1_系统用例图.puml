@@ -1,0 +1,33 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+left to right direction
+
+actor "测试工程师" as User
+actor "LLM大模型" as AI
+
+rectangle "APITestGen平台" {
+  usecase "导入OpenAPI文档" as UC1
+  usecase "配置LLM提供商" as UC2
+  usecase "AI生成测试用例" as UC3
+  usecase "审阅测试代码" as UC4
+  usecase "执行测试" as UC5
+  usecase "查看缺陷报告" as UC6
+  usecase "导出Postman" as UC7
+  usecase "导入Postman" as UC8
+  usecase "批量管理项目" as UC9
+  usecase "查看仪表盘" as UC10
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+User --> UC10
+
+AI --> UC3
+@enduml

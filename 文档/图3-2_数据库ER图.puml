@@ -1,0 +1,102 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+title 数据库ER图
+
+entity "projects\n项目表" {
+  * id : UUID 主键
+  --
+  * name : 项目名称
+  description : 描述
+  base_url : API地址
+}
+
+entity "specs\n文档表" {
+  * id : UUID 主键
+  --
+  * project_id : 外键
+  * name : 文档名称
+  version : 版本号
+  parse_status : 解析状态
+  raw_content : 原始内容
+}
+
+entity "endpoints\n接口表" {
+  * id : UUID 主键
+  --
+  * spec_id : 外键
+  * path : 路径
+  method : HTTP方法
+  parameters : 参数JSON
+  request_body : 请求体JSON
+  responses : 响应JSON
+}
+
+entity "testcases\n用例表" {
+  * id : UUID 主键
+  --
+  * endpoint_id : 外键
+  * category : 用例类别
+  test_code : 测试代码
+  status : 审阅状态
+  llm_model : 生成模型
+}
+
+entity "executions\n执行表" {
+  * id : UUID 主键
+  --
+  * project_id : 外键
+  status : 执行状态
+  total_tests : 总数
+  passed : 通过数
+  failed : 失败数
+}
+
+entity "test_results\n结果表" {
+  * id : UUID 主键
+  --
+  * execution_id : 外键
+  * testcase_id : 外键
+  status : 结果状态
+  error_message : 错误信息
+}
+
+entity "defect_reports\n报告表" {
+  * id : UUID 主键
+  --
+  * execution_id : 外键
+  format : 格式
+  content : 内容
+  pass_rate : 通过率
+}
+
+projects ||--o{ specs
+projects ||--o{ testcases
+projects ||--o{ executions
+projects ||--o{ defect_reports
+specs ||--o{ endpoints
+endpoints ||--o{ testcases
+executions ||--o{ test_results
+testcases ||--o{ test_results
+executions ||--o{ defect_reports
+
+entity "llm_providers\n提供商表" {
+  * id : UUID 主键
+  --
+  * name : 名称(唯一)
+  provider_type : 类型枚举
+  api_base : API地址
+  api_key_encrypted : 加密密钥
+  default_model : 默认模型
+}
+
+entity "postman_collections\nPostman集合" {
+  * id : UUID 主键
+  --
+  * project_id : 外键
+  name : 集合名称
+  collection_json : JSON数据
+  item_count : 条目数
+}
+
+projects ||--o{ postman_collections
+@enduml

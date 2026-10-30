@@ -1,0 +1,29 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+title 前端组件树
+
+[App.vue] as App
+[AppLayout] as Layout
+[Sidebar] as SB
+
+[首页\n统计+最近] as Home
+[工作区列表\nCRUD] as WSL
+[工作台★\n核心页面] as WS
+[Postman\n导入导出] as PM
+[LLM配置] as SET
+
+App --> Layout
+Layout --> SB
+Layout --> Home
+Layout --> WSL
+Layout --> WS
+Layout --> PM
+Layout --> SET
+
+note right of WS
+  一页全流程:
+  导入->生成->执行->报告
+  四个Tab:
+  接口|用例|执行|报告
+end note
+@enduml

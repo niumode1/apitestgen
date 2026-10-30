@@ -1,0 +1,89 @@
+Generate positive (happy-path) pytest test cases for the following API endpoint.
+
+## Endpoint Information
+- Path: {{ endpoint.path }}
+- Method: {{ endpoint.method.upper() }}
+- Summary: {{ endpoint.summary }}
+- Description: {{ endpoint.description }}
+
+## Parameters
+{% if endpoint.parameters %}
+{% for param in endpoint.parameters %}
+- Name: {{ param.get('name', 'unknown') }}
+  In: {{ param.get('in', 'unknown') }}
+  Required: {{ param.get('required', False) }}
+  Schema: {{ param.get('schema', {}) | tojson }}
+{% endfor %}
+{% else %}
+(None — no parameters)
+{% endif %}
+
+## Request Body
+{% if endpoint.request_body %}
+{{ endpoint.request_body | tojson(indent=2) }}
+{% else %}
+(None)
+{% endif %}
+
+## Expected Success Responses
+{% for status, resp in endpoint.responses.items() %}
+{% if status == '200' or status == '201' or status == '202' or status == '2XX' %}
+- Status {{ status }}: {{ resp.get('description', 'Success') }}
+  {% if resp.get('content') %}
+  Response Schema: {{ resp.get('content', {}) | tojson(indent=2) }}
+  {% endif %}
+{% endif %}
+{% endfor %}
+
+## LLM Analysis
+{{ analysis | default('No prior analysis available.') }}
+
+## Instructions
+Generate {{ count | default(3) }} valid positive test cases. Each test must:
+
+1. Use valid, realistic input values that SHOULD succeed
+2. Send the request via httpx.AsyncClient
+3. Assert the response status code is a success code (200/201/202)
+4. Assert the response body structure matches the declared schema
+5. Include a descriptive test function name: test_{method}_{path_slug}_{scenario}
+
+CRITICAL RULES:
+
+## Schema Accuracy
+- Match response field names EXACTLY from the declared response schema
+- NEVER guess field names — look at the Response Schema section above
+- Use the EXACT field names shown in the schema, not synonyms
+- Example: if schema says "total_pages", use "total_pages" NOT "pages"
+
+## ID / Path Parameter Handling
+- NEVER hardcode made-up IDs like "fake-id" or "test-id" or random numbers
+- For DELETE/PUT/GET-by-ID endpoints that need a resource: FIRST create via POST, use returned ID
+- Pattern: create_response = await client.post(...); resource_id = create_response.json()["id"]; then use resource_id
+
+## Assertion Rules
+- NEVER use "if len(data) > 0:" to guard assertions — use "assert len(data) > 0" instead
+- NEVER wrap assertions inside if/else blocks — every assert MUST execute unconditionally
+- For list responses: assert len(data) > 0, "Expected non-empty result" BEFORE accessing elements
+- Every assert must have a descriptive error message: assert x == y, f"Expected {y}, got {x}"
+
+Return ONLY Python code inside ```python blocks, one block per test function.
+The code must be importable and executable with pytest.
+Use BASE_URL from conftest.py for the base URL.
+
+Example format:
+```python
+import pytest
+import httpx
+from conftest import BASE_URL
+
+async def test_get_users_list_success(async_client: httpx.AsyncClient):
+    \"\"\"Test GET /users returns a non-empty list of users.\"\"\"
+    response = await async_client.get(f"{BASE_URL}/users")
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+    data = response.json()
+    assert isinstance(data, list), "Expected list response"
+    assert len(data) > 0, "Expected non-empty user list"
+    user = data[0]
+    assert 'id' in user, "User missing id field"
+    assert 'name' in user, "User missing name field"
+```

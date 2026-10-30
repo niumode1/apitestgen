@@ -1,0 +1,175 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Mini Shop API",
+    "description": "电商系统 — 商品/订单/购物车/用户",
+    "version": "1.2.0"
+  },
+  "servers": [{"url": "http://localhost:9001/api/v1"}],
+  "paths": {
+    "/products": {
+      "get": {
+        "summary": "商品列表",
+        "tags": ["products"],
+        "parameters": [
+          {"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1}},
+          {"name": "page_size", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 50}},
+          {"name": "category", "in": "query", "schema": {"type": "string"}},
+          {"name": "min_price", "in": "query", "schema": {"type": "number", "minimum": 0}},
+          {"name": "max_price", "in": "query", "schema": {"type": "number", "minimum": 0}},
+          {"name": "sort", "in": "query", "schema": {"type": "string", "enum": ["price_asc", "price_desc", "newest", "sales"]}},
+          {"name": "in_stock", "in": "query", "schema": {"type": "boolean"}}
+        ],
+        "responses": {"200": {"description": "OK"}}
+      },
+      "post": {
+        "summary": "添加商品",
+        "tags": ["products"],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["name", "price"], "properties": {
+          "name": {"type": "string", "minLength": 1, "maxLength": 100},
+          "description": {"type": "string"},
+          "price": {"type": "number", "minimum": 0.01, "maximum": 999999},
+          "category": {"type": "string"},
+          "stock": {"type": "integer", "minimum": 0, "maximum": 99999},
+          "images": {"type": "array", "items": {"type": "string", "format": "uri"}, "minItems": 1, "maxItems": 10},
+          "tags": {"type": "array", "items": {"type": "string"}}
+        }}}}},
+        "responses": {"201": {"description": "创建成功"}, "422": {"description": "校验失败"}}
+      }
+    },
+    "/products/{productId}": {
+      "get": {
+        "summary": "商品详情",
+        "tags": ["products"],
+        "parameters": [{"name": "productId", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "responses": {"200": {"description": "OK"}, "404": {"description": "不存在"}}
+      },
+      "put": {
+        "summary": "更新商品",
+        "tags": ["products"],
+        "parameters": [{"name": "productId", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {
+          "name": {"type": "string"}, "price": {"type": "number"}, "stock": {"type": "integer"}
+        }}}}},
+        "responses": {"200": {"description": "OK"}}
+      },
+      "delete": {
+        "summary": "删除商品",
+        "tags": ["products"],
+        "parameters": [{"name": "productId", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "responses": {"200": {"description": "已删除"}}
+      }
+    },
+    "/products/{productId}/reviews": {
+      "get": {
+        "summary": "商品评价",
+        "tags": ["reviews"],
+        "parameters": [
+          {"name": "productId", "in": "path", "required": true, "schema": {"type": "integer"}},
+          {"name": "rating", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 5}}
+        ],
+        "responses": {"200": {"description": "评价列表"}}
+      },
+      "post": {
+        "summary": "添加评价",
+        "tags": ["reviews"],
+        "parameters": [{"name": "productId", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["rating", "content"], "properties": {
+          "rating": {"type": "integer", "minimum": 1, "maximum": 5},
+          "content": {"type": "string", "minLength": 1, "maxLength": 2000},
+          "nickname": {"type": "string", "maxLength": 30}
+        }}}}},
+        "responses": {"201": {"description": "OK"}}
+      }
+    },
+    "/cart": {
+      "get": {
+        "summary": "查看购物车",
+        "tags": ["cart"],
+        "responses": {"200": {"description": "购物车"}}
+      },
+      "post": {
+        "summary": "加入购物车",
+        "tags": ["cart"],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["product_id", "quantity"], "properties": {
+          "product_id": {"type": "integer"},
+          "quantity": {"type": "integer", "minimum": 1, "maximum": 100},
+          "variant": {"type": "string"}
+        }}}}},
+        "responses": {"200": {"description": "已加入"}, "422": {"description": "库存不足"}}
+      },
+      "delete": {
+        "summary": "清空购物车",
+        "tags": ["cart"],
+        "responses": {"200": {"description": "已清空"}}
+      }
+    },
+    "/cart/{itemId}": {
+      "put": {
+        "summary": "修改数量",
+        "tags": ["cart"],
+        "parameters": [{"name": "itemId", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["quantity"], "properties": {
+          "quantity": {"type": "integer", "minimum": 0, "maximum": 100}
+        }}}}},
+        "responses": {"200": {"description": "OK"}}
+      },
+      "delete": {
+        "summary": "移出购物车",
+        "tags": ["cart"],
+        "parameters": [{"name": "itemId", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "responses": {"200": {"description": "已移出"}}
+      }
+    },
+    "/orders": {
+      "get": {
+        "summary": "订单列表",
+        "tags": ["orders"],
+        "parameters": [
+          {"name": "status", "in": "query", "schema": {"type": "string", "enum": ["pending", "paid", "shipped", "delivered", "cancelled"]}},
+          {"name": "page", "in": "query", "schema": {"type": "integer"}}
+        ],
+        "responses": {"200": {"description": "OK"}}
+      },
+      "post": {
+        "summary": "创建订单",
+        "tags": ["orders"],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["items", "address"], "properties": {
+          "items": {"type": "array", "items": {"type": "object", "properties": {
+            "product_id": {"type": "integer"}, "quantity": {"type": "integer"}
+          }}},
+          "address": {"type": "string", "minLength": 1, "maxLength": 500},
+          "coupon_code": {"type": "string"},
+          "payment_method": {"type": "string", "enum": ["credit_card", "alipay", "wechat_pay"]}
+        }}}}},
+        "responses": {"201": {"description": "订单创建成功"}, "422": {"description": "校验失败"}}
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "summary": "订单详情",
+        "tags": ["orders"],
+        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
+        "responses": {"200": {"description": "OK"}}
+      },
+      "post": {
+        "summary": "取消订单",
+        "tags": ["orders"],
+        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}],
+        "responses": {"200": {"description": "已取消"}}
+      }
+    },
+    "/orders/{orderId}/refund": {
+      "post": {
+        "summary": "申请退款",
+        "tags": ["orders"],
+        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["reason"], "properties": {
+          "reason": {"type": "string", "minLength": 1, "maxLength": 500},
+          "amount": {"type": "number", "minimum": 0.01}
+        }}}}},
+        "responses": {"200": {"description": "退款已受理"}}
+      }
+    }
+  }
+}

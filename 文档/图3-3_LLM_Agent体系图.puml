@@ -1,0 +1,57 @@
+@startuml
+allowmixing
+skinparam backgroundColor #FFFFFF
+title LLM Agent体系
+
+package "Provider抽象层" {
+  interface "BaseLLMProvider" as Prov {
+    complete()
+    complete_stream()
+  }
+  component "OpenAI实现" as OAI
+  component "Anthropic实现" as ANT
+  component "兼容接口实现" as OAC
+}
+
+package "Agent基类" {
+  abstract "BaseAgent" as BA {
+    run(上下文)
+    run_json(上下文)
+  }
+  component "分析Agent" as AA
+  component "正向Agent" as PA
+  component "负向Agent" as NA
+  component "边界Agent" as BDA
+  component "安全Agent" as SA
+  component "SchemaAgent" as SCA
+}
+
+package "编排层" {
+  component "编排器\n(Semaphore=3)" as ORC
+}
+
+package "输出层" {
+  component "CodeGen\n(AST校验)" as CG
+}
+
+OAI -down-|> Prov
+ANT -down-|> Prov
+OAC -down-|> Prov
+
+AA -up-|> BA
+PA -up-|> BA
+NA -up-|> BA
+BDA -up-|> BA
+SA -up-|> BA
+SCA -up-|> BA
+
+ORC --> AA : 1.分析
+ORC --> PA : 2.并行生成
+ORC --> NA
+ORC --> BDA
+ORC --> SA
+ORC --> SCA
+ORC --> CG : 3.校验入库
+
+BA --> Prov
+@enduml

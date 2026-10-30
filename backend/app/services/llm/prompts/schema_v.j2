@@ -1,0 +1,44 @@
+Generate schema validation test cases for the following API endpoint.
+These tests verify the response matches the declared OpenAPI response schema.
+
+## Endpoint Information
+- Path: {{ endpoint.path }}
+- Method: {{ endpoint.method.upper() }}
+
+## Expected Success Response Schema
+{% for status, resp in endpoint.responses.items() %}
+{% if status == '200' or status == '201' %}
+- Status {{ status }}:
+  Content-Type: application/json
+  Schema: {{ resp.get('content', {}).get('application/json', {}).get('schema', resp) | tojson(indent=2) }}
+{% endif %}
+{% endfor %}
+
+## Instructions
+Generate {{ count | default(3) }} schema validation tests:
+
+1. **Response structure validation**: Send valid request → assert 200 → validate every field in the response matches the schema:
+   - Check field types: string fields are strings, integer fields are ints, arrays are lists
+   - Check required fields: every required field in the schema exists in the response
+   - Check nested objects: recurse into nested schemas
+
+2. **Data format validation**: Validate specific formats:
+   - email fields contain '@'
+   - date/datetime fields match ISO format
+   - uuid fields match UUID pattern
+   - uri fields start with http:// or https://
+
+3. **Array validation**: For array responses:
+   - assert every item in the array matches the item schema
+   - check array bounds (minItems/maxItems if specified in schema)
+
+Use the `jsonschema` library for schema validation when possible:
+```python
+from jsonschema import validate
+schema = {...}  # the OpenAPI schema
+validate(instance=data, schema=schema)
+```
+
+CRITICAL: No conditional assertions — every assert executes unconditionally.
+
+Return ONLY ```python blocks. Use httpx.AsyncClient and BASE_URL.

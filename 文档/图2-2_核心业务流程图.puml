@@ -1,0 +1,47 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+title 核心业务流程
+
+|用户|
+start
+:上传OpenAPI文档;
+
+|系统|
+:解析YAML/JSON;
+:提取接口元数据;
+:存入数据库;
+
+|LLM Agent|
+partition "分析阶段" {
+  :分析Agent\n提取参数语义和约束;
+}
+
+partition "并行生成阶段" {
+fork
+  :正向用例Agent;
+fork again
+  :负向用例Agent;
+fork again
+  :边界值Agent;
+fork again
+  :安全测试Agent;
+fork again
+  :Schema校验Agent;
+end fork
+}
+
+|系统|
+:CodeGen语法校验;
+:保存TestCase;
+:写入pytest文件;
+
+|用户|
+:点击执行测试;
+
+|系统|
+:pytest子进程运行;
+:解析JSON报告;
+:生成缺陷报告;
+
+stop
+@enduml
